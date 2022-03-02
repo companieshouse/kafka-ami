@@ -8,3 +8,9 @@ volume_mounts:
     logical_volume: data
     volume_group: kafka
     mount_point: /data/kafka
+
+kafka_sha512: "5954C1CF38187134A6E0A21520CBEF5CD5320A3E9290E630C3895990E892219917D911FABBC64DA5DB17BCAA940B8277C23344B50F2FF4256EACA78116E9FDC9"
+# We're not using scala but...
+# (scala-version)-(kafka-version)
+kafka_version: "3.1.0"
+scala_version: "2.13"

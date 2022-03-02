@@ -5,3 +5,4 @@
   roles:
     - aws-nvme-device-files
     - mounted-volume
+    - kafka
