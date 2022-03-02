@@ -1,0 +1,10 @@
+---
+
+ansible_user: ec2-user
+
+volume_mounts:
+  - device: /dev/xvdb
+    file_system_type: xfs
+    logical_volume: data
+    volume_group: kafka
+    mount_point: /data/kafka

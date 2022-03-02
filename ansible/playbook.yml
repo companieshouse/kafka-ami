@@ -1,1 +1,7 @@
 ---
+
+- hosts: kafka
+  become: true
+  roles:
+    - aws-nvme-device-files
+    - mounted-volume
