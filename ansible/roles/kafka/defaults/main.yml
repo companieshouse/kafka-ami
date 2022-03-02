@@ -7,3 +7,4 @@ kafka_install_directory: /opt
 kafka_service_group: kafka
 kafka_service_user: kafka
 kafka_timezone: Europe/London
+kafka_zookeeper_urls: localhost:2181

@@ -65,9 +65,9 @@
   ansible.builtin.debug:
     msg: "{{ temp_dir.path }}"
 
-- name: Copy configuration placeholders
-  ansible.builtin.copy:
-    src: "{{ item.path }}"
+- name: Configure Kafka
+  ansible.builtin.template:
+    src: "{{ item.path }}.j2"
     dest: "/{{ item.path }}"
     owner: "{{ item.owner }}"
     group: "{{ item.group }}"
