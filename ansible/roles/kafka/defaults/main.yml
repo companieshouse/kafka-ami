@@ -1,0 +1,10 @@
+---
+
+kafka_binary_name: "kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
+kafka_data_directory: /data/kafka
+kafka_home: "{{ kafka_install_directory }}/kafka"
+kafka_install_directory: /opt
+kafka_service_group: kafka
+kafka_service_user: kafka
+kafka_timezone: Europe/London
+kafka_zookeeper_urls: localhost:2181

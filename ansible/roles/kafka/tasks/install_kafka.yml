@@ -1,0 +1,95 @@
+---
+
+- name: Create {{ kafka_service_group }} system group
+  group:
+    name: "{{ kafka_service_group }}"
+    state: present
+    system: yes
+
+- name: Create {{ kafka_service_user }} system user
+  user:
+    name: "{{ kafka_service_user }}"
+    shell: /bin/bash
+    groups: "{{ kafka_service_group }}"
+    system: yes
+
+- name: Create temporary directory...
+  tempfile:
+    state: directory
+  register: temp_dir
+
+- name: Created
+  ansible.builtin.debug:
+    msg: "{{ temp_dir.path }}"
+
+- name: "Download kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
+  get_url:
+    url: "{{ download_url }}/kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
+    dest: "{{ temp_dir.path }}"
+    mode: 0600
+    checksum: "sha512:{{ kafka_sha512 }}"
+  with_items:
+    - "https://dlcdn.apache.org/kafka/{{ kafka_version }}"
+  loop_control:
+    loop_var: download_url
+
+- name: Extract kafka binary package
+  unarchive:
+    remote_src: yes
+    src: "{{ temp_dir.path }}/kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
+    dest: "{{ temp_dir.path }}"
+
+- name: Install kafka
+  copy:
+    src: "{{ temp_dir.path }}/kafka_{{ scala_version }}-{{ kafka_version }}"
+    dest: "{{ kafka_install_directory }}"
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    remote_src: yes
+    mode: 0755
+
+- name: Create a symbolic link
+  ansible.builtin.file:
+    src: "{{ kafka_install_directory }}/kafka_{{ scala_version }}-{{ kafka_version }}"
+    dest: "{{ kafka_home }}"
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    state: link
+
+- name: Delete temporary directory...
+  file:
+    path: "{{ temp_dir.path }}"
+    state: absent
+
+- name: Deleted
+  ansible.builtin.debug:
+    msg: "{{ temp_dir.path }}"
+
+- name: Configure Kafka
+  ansible.builtin.template:
+    src: "{{ item.path }}.j2"
+    dest: "/{{ item.path }}"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  with_items:
+    - path: "opt/kafka/config/server.properties"
+      mode: '0644'
+      owner: "{{ kafka_service_user }}"
+      group: "{{ kafka_service_group }}"
+    - path: "etc/systemd/system/kafka.service"
+      mode: '0644'
+      owner: root
+      group: root
+
+- name: Set ownership and permissions for data directory {{ kafka_data_directory }}
+  file:
+    path: "{{ kafka_data_directory }}"
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    mode: '0755'
+
+- name: Disable the kafka service
+  service:
+    name: kafka
+    enabled: no
