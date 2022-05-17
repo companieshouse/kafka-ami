@@ -7,3 +7,4 @@
     - mounted-volume
     - kafka
     - logrotate
+    - prometheus-node-exporter
