@@ -7,7 +7,7 @@ roles:
 
   - src: https://github.com/companieshouse/ansible-role-kafka-prometheus-exporter
     name: kafka-prometheus-exporter
-    version: kafka-3.1.0-0.1.0
+    version: kafka-3.1.0
 
   - src: https://github.com/companieshouse/ansible-role-logrotate
     name: logrotate
