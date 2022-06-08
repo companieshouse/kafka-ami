@@ -6,5 +6,6 @@
     - aws-nvme-device-files
     - mounted-volume
     - kafka
+    - kafka-prometheus-exporter
     - logrotate
     - prometheus-node-exporter
