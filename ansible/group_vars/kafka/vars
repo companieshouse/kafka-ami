@@ -32,6 +32,8 @@ logrotate_wtmp:
     - minsize 1M
     - rotate 1
 
+resource_limits_remove_existing: true
+
 # We're not using scala but...
 # (scala-version)-(kafka-version)
 scala_version: "2.13"
