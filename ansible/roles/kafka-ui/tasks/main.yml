@@ -15,15 +15,13 @@
     state: permissive
   when: selinux_enforcing
 
-- name: Set system timezone to {{ kafka_timezone }}
+- name: Set system timezone to {{ kafka_ui_timezone }}
   community.general.timezone:
-    name: "{{ kafka_timezone }}"
+    name: "{{ kafka_ui_timezone }}"
 
-- name: Install Java
-  ansible.builtin.import_tasks: install_jdk.yml
-
-- name: Install Kafka
-  ansible.builtin.import_tasks: install_kafka.yml
+- name: Install Kafdrop
+  ansible.builtin.import_tasks: install_kafdrop.yml
+  when: kafka_ui_install_kafdrop | bool
 
 - name: Put SELinux back in enforcing mode
   ansible.posix.selinux:

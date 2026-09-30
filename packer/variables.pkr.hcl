@@ -23,13 +23,13 @@ variable "aws_region" {
 
 variable "aws_source_ami_filter_name" {
   type        = string
-  default     = "amzn2-base-*"
+  default     = "amzn2023-base-*"
   description = "The source AMI filter string. Any filter described by the DescribeImages API documentation is valid. If multiple images match then the latest will be used"
 }
 
 variable "aws_source_ami_owner_id" {
   type        = string
-  default     = "169942020521"
+  default     = "416670754337"
   description = "The source AMI owner ID; used in combination with aws_source_ami_filter_name to filter for matching source AMIs"
 }
 
@@ -50,6 +50,18 @@ variable "data_volume_size_gib" {
   description = "The EC2 instance data volume size in Gibibytes (GiB)"
 }
 
+variable "data_volume_iops" {
+  type        = number
+  default     = 3000
+  description = "The baseline IOPS for the data EBS volume; 3000 is the gp3 default"
+}
+
+variable "data_volume_throughput" {
+  type        = number
+  default     = 125
+  description = "The throughput, in MiB/s, for the data EBS volume; 125 is the gp3 default"
+}
+
 variable "force_delete_snapshot" {
   type        = bool
   default     = false
@@ -62,6 +74,12 @@ variable "force_deregister" {
   description = "Deregister an existing AMI if one with the same name already exists"
 }
 
+variable "kms_key_id" {
+  type        = string
+  default     = "alias/packer-builders-kms"
+  description = "The KMS key ID or alias used to encrypt the AMI EBS volumes"
+}
+
 variable "playbook_file_path" {
   type        = string
   default     = "../ansible/playbook.yml"
@@ -72,6 +90,24 @@ variable "root_volume_size_gib" {
   type        = number
   default     = 20
   description = "The EC2 instance root volume size in Gibibytes (GiB)"
+}
+
+variable "root_volume_iops" {
+  type        = number
+  default     = 3000
+  description = "The baseline IOPS for the root EBS volume; 3000 is the gp3 default"
+}
+
+variable "root_volume_throughput" {
+  type        = number
+  default     = 125
+  description = "The throughput, in MiB/s, for the root EBS volume; 125 is the gp3 default"
+}
+
+variable "ssh_clear_authorized_keys" {
+  type        = bool
+  default     = true
+  description = "Defines whether the authorized_keys file should be cleared, post-build"
 }
 
 variable "ssh_private_key_file" {

@@ -1,0 +1,35 @@
+#!/bin/bash
+set -euo pipefail
+
+PROPERTIES="{{ kafka_home }}/config/server.properties"
+CLUSTERID_FILE="/etc/kafka-clusterid"
+
+# IMDSv2: token required since AMI has http_tokens=required
+TOKEN=$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+PRIVATE_IP=$(curl -sf -H "X-aws-ec2-metadata-token: ${TOKEN}" \
+  "http://169.254.169.254/latest/meta-data/local-ipv4")
+
+# Single-node only: replace the localhost placeholder with this instance's IP.
+# Multi-node config (supplied by Terraform) already advertises a stable DNS name.
+if grep -q '^advertised.listeners=PLAINTEXT://localhost:' "${PROPERTIES}"; then
+  sed -i "s|^advertised.listeners=.*|advertised.listeners=PLAINTEXT://${PRIVATE_IP}:9092|" \
+    "${PROPERTIES}"
+fi
+
+# Generate cluster ID once and cache it; subsequent reboots reuse it
+if [[ ! -s "${CLUSTERID_FILE}" ]]; then
+  "{{ kafka_home }}/bin/kafka-storage.sh" random-uuid > "${CLUSTERID_FILE}"
+fi
+CLUSTER_ID=$(cat "${CLUSTERID_FILE}")
+
+FORMAT_ARGS=(--ignore-formatted)
+if ! grep -q '^controller.quorum.voters=' "${PROPERTIES}"; then
+  FORMAT_ARGS+=(--standalone)
+fi
+
+runuser -u {{ kafka_service_user }} -- \
+  "{{ kafka_home }}/bin/kafka-storage.sh" format \
+  -t "${CLUSTER_ID}" \
+  -c "${PROPERTIES}" \
+  "${FORMAT_ARGS[@]}"

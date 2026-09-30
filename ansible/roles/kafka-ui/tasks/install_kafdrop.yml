@@ -1,0 +1,56 @@
+---
+
+- name: Create {{ kafdrop_group }} system group
+  ansible.builtin.group:
+    name: "{{ kafdrop_group }}"
+    state: present
+    system: true
+
+- name: Create {{ kafdrop_user }} system user
+  ansible.builtin.user:
+    name: "{{ kafdrop_user }}"
+    group: "{{ kafdrop_group }}"
+    system: true
+    shell: /sbin/nologin
+    create_home: false
+
+- name: Create {{ kafdrop_install_dir }} directory
+  ansible.builtin.file:
+    path: "{{ kafdrop_install_dir }}"
+    state: directory
+    owner: "{{ kafdrop_user }}"
+    group: "{{ kafdrop_group }}"
+    mode: '0755'
+
+- name: "Download kafdrop-{{ kafdrop_version }}.jar"
+  ansible.builtin.get_url:
+    url: "https://github.com/obsidiandynamics/kafdrop/releases/download/{{ kafdrop_version }}/kafdrop-{{ kafdrop_version }}.jar"
+    dest: "{{ kafdrop_install_dir }}/kafdrop.jar"
+    owner: "{{ kafdrop_user }}"
+    group: "{{ kafdrop_group }}"
+    mode: '0644'
+    checksum: "sha256:{{ kafdrop_sha256 }}"
+
+- name: Install Kafdrop systemd unit
+  ansible.builtin.template:
+    src: etc/systemd/system/kafdrop.service.j2
+    dest: /etc/systemd/system/kafdrop.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable kafdrop service
+  ansible.builtin.systemd:
+    name: kafdrop
+    enabled: true
+    daemon_reload: true
+
+- name: Restore SELinux contexts for Kafdrop assets
+  ansible.builtin.command:
+    argv:
+      - restorecon
+      - -RF
+      - "{{ kafdrop_install_dir }}"
+      - /etc/systemd/system/kafdrop.service
+  changed_when: false
+  when: ansible_selinux.status == 'enabled'
