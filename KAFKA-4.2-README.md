@@ -41,7 +41,7 @@ This single-node build runs Kafka and Kafdrop on one instance, with data on a de
 3. Generates a cluster ID once and caches it in `/etc/kafka-clusterid`.
 4. Formats the KRaft metadata log with `kafka-storage.sh`.
 
-When the `kafka-streaming` Terraform module supplies `server.properties` with a controller voter list and cluster ID, the bootstrap keeps that config and formats the shared quorum instead of a standalone node.
+For a three-broker cluster, the `kafka-streaming` Terraform module supplies the static controller voter list in `server.properties` and writes the shared cluster ID to `/etc/kafka-clusterid`. Bootstrap fails if voters are configured but the shared cluster ID is missing. Without a voter list, it generates a cluster ID and formats a standalone node.
 
 Key files:
 

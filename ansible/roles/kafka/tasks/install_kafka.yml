@@ -30,8 +30,7 @@
     checksum: "sha512:{{ kafka_sha512 }}"
     timeout: 60
   with_items:
-    # CDN-backed mirror; archive.apache.org (unmirrored) is slow/unreliable for current releases
-    - "https://downloads.apache.org/kafka/{{ kafka_version }}"
+    - "https://archive.apache.org/dist/kafka/{{ kafka_version }}"
   loop_control:
     loop_var: download_url
   register: kafka_download

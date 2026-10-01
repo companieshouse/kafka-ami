@@ -1,5 +1,10 @@
 ---
 
+- name: Install Corretto 25 for Kafdrop
+  ansible.builtin.dnf:
+    name: java-25-amazon-corretto-headless
+    state: present
+
 - name: Create {{ kafdrop_group }} system group
   ansible.builtin.group:
     name: "{{ kafdrop_group }}"
