@@ -13,6 +13,7 @@ build {
   }
 
   provisioner "shell" {
+    execute_command = "{{ .Vars }} bash '{{ .Path }}'"
     inline = [
       "sudo find /root /home -name authorized_keys -delete",
       "sudo find /root /home -name '.*history' -delete"
