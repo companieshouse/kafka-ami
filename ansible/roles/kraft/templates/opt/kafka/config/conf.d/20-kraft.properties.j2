@@ -1,0 +1,8 @@
+advertised.listeners=PLAINTEXT://{{ kafka_advertised_host }}:9092
+controller.listener.names=CONTROLLER
+controller.quorum.bootstrap.servers={{ kafka_controller_quorum_bootstrap_servers }}
+inter.broker.listener.name=PLAINTEXT
+listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,SSL:SSL,SASL_PLAINTEXT:SASL_PLAINTEXT,SASL_SSL:SASL_SSL
+listeners=PLAINTEXT://:9092,CONTROLLER://127.0.0.1:9093
+node.id={{ kafka_node_id }}
+process.roles=broker,controller

@@ -1,0 +1,17 @@
+[Unit]
+Description=Kafdrop Kafka UI
+Documentation=https://github.com/obsidiandynamics/kafdrop
+Requires=network.target
+After=network.target kafka.service
+
+[Service]
+Type=simple
+User={{ kafdrop_user }}
+Group={{ kafdrop_group }}
+ExecStart={{ kafdrop_java }} -jar {{ kafdrop_install_dir }}/kafdrop.jar --kafka.brokerConnect={{ kafdrop_broker_connect }} --server.port={{ kafdrop_port }}
+Restart=on-failure
+RestartSec=10
+SyslogIdentifier=kafdrop
+
+[Install]
+WantedBy=multi-user.target
