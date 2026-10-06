@@ -1,20 +1,20 @@
 ---
 
 - name: Create {{ kafka_service_group }} system group
-  group:
+  ansible.builtin.group:
     name: "{{ kafka_service_group }}"
     state: present
-    system: yes
+    system: true
 
 - name: Create {{ kafka_service_user }} system user
-  user:
+  ansible.builtin.user:
     name: "{{ kafka_service_user }}"
     shell: /bin/bash
-    groups: "{{ kafka_service_group }}"
-    system: yes
+    group: "{{ kafka_service_group }}"
+    system: true
 
 - name: Create temporary directory...
-  tempfile:
+  ansible.builtin.tempfile:
     state: directory
   register: temp_dir
 
@@ -23,30 +23,35 @@
     msg: "{{ temp_dir.path }}"
 
 - name: "Download kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
-  get_url:
+  ansible.builtin.get_url:
     url: "{{ download_url }}/kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
     dest: "{{ temp_dir.path }}"
-    mode: 0600
+    mode: '0600'
     checksum: "sha512:{{ kafka_sha512 }}"
+    timeout: 60
   with_items:
-    - "https://dlcdn.apache.org/kafka/{{ kafka_version }}"
+    - "https://archive.apache.org/dist/kafka/{{ kafka_version }}"
   loop_control:
     loop_var: download_url
+  register: kafka_download
+  until: kafka_download is succeeded
+  retries: 3
+  delay: 10
 
 - name: Extract kafka binary package
-  unarchive:
-    remote_src: yes
+  ansible.builtin.unarchive:
+    remote_src: true
     src: "{{ temp_dir.path }}/kafka_{{ scala_version }}-{{ kafka_version }}.tgz"
     dest: "{{ temp_dir.path }}"
 
 - name: Install kafka
-  copy:
+  ansible.builtin.copy:
     src: "{{ temp_dir.path }}/kafka_{{ scala_version }}-{{ kafka_version }}"
     dest: "{{ kafka_install_directory }}"
     owner: "{{ kafka_service_user }}"
     group: "{{ kafka_service_group }}"
-    remote_src: yes
-    mode: 0755
+    remote_src: true
+    mode: '0755'
 
 - name: Create a symbolic link
   ansible.builtin.file:
@@ -57,7 +62,7 @@
     state: link
 
 - name: Delete temporary directory...
-  file:
+  ansible.builtin.file:
     path: "{{ temp_dir.path }}"
     state: absent
 
@@ -65,31 +70,82 @@
   ansible.builtin.debug:
     msg: "{{ temp_dir.path }}"
 
-- name: Configure Kafka
+- name: Create conf.d directory for server.properties fragments
+  ansible.builtin.file:
+    path: "{{ kafka_home }}/config/conf.d"
+    state: directory
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    mode: '0755'
+
+- name: Write common Kafka config fragment
   ansible.builtin.template:
-    src: "{{ item.path }}.j2"
-    dest: "/{{ item.path }}"
-    owner: "{{ item.owner }}"
-    group: "{{ item.group }}"
-    mode: "{{ item.mode }}"
-  with_items:
-    - path: "opt/kafka/config/server.properties"
-      mode: '0644'
-      owner: "{{ kafka_service_user }}"
-      group: "{{ kafka_service_group }}"
-    - path: "etc/systemd/system/kafka.service"
-      mode: '0644'
-      owner: root
-      group: root
+    src: opt/kafka/config/conf.d/10-common.properties.j2
+    dest: "{{ kafka_home }}/config/conf.d/10-common.properties"
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    mode: '0644'
+
+- name: Create Kafka application log directory
+  ansible.builtin.file:
+    path: "{{ kafka_log_directory }}"
+    state: directory
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    mode: '0755'
+
+- name: Write durability config fragment
+  ansible.builtin.template:
+    src: opt/kafka/config/conf.d/30-durability.properties.j2
+    dest: "{{ kafka_home }}/config/conf.d/30-durability.properties"
+    owner: "{{ kafka_service_user }}"
+    group: "{{ kafka_service_group }}"
+    mode: '0644'
+
+- name: Install Kafka systemd unit
+  ansible.builtin.template:
+    src: etc/systemd/system/kafka.service.j2
+    dest: /etc/systemd/system/kafka.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Install Kafka environment file
+  ansible.builtin.template:
+    src: etc/sysconfig/kafka.j2
+    dest: /etc/sysconfig/kafka
+    owner: root
+    group: root
+    mode: '0644'
 
 - name: Set ownership and permissions for data directory {{ kafka_data_directory }}
-  file:
+  ansible.builtin.file:
     path: "{{ kafka_data_directory }}"
     owner: "{{ kafka_service_user }}"
     group: "{{ kafka_service_group }}"
     mode: '0755'
 
-- name: Disable the kafka service
-  service:
+- name: Define SELinux file context for the Kafka data directory
+  community.general.sefcontext:
+    target: "{{ kafka_data_directory }}(/.*)?"
+    setype: var_lib_t
+    state: present
+  when: ansible_selinux.status == 'enabled'
+
+- name: Restore SELinux contexts for Kafka assets
+  ansible.builtin.command:
+    argv:
+      - restorecon
+      - -RF
+      - "{{ kafka_install_directory }}/kafka_{{ scala_version }}-{{ kafka_version }}"
+      - "{{ kafka_data_directory }}"
+      - "{{ kafka_log_directory }}"
+      - /etc/systemd/system/kafka.service
+  changed_when: false
+  when: ansible_selinux.status == 'enabled'
+
+- name: Enable kafka service
+  ansible.builtin.systemd:
     name: kafka
-    enabled: no
+    enabled: true
+    daemon_reload: true

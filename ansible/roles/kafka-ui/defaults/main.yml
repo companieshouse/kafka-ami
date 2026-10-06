@@ -1,0 +1,13 @@
+---
+
+kafka_ui_timezone: Europe/London
+kafka_ui_install_kafdrop: true
+
+kafdrop_group: kafdrop
+kafdrop_user: kafdrop
+kafdrop_install_dir: /opt/kafdrop
+kafdrop_java: /usr/lib/jvm/java-25-amazon-corretto.x86_64/bin/java
+kafdrop_version: "4.3.0"
+kafdrop_sha256: "776d192350db6fb56397f907e110a70e96551cf189d071ac017024490843902a"
+kafdrop_port: 8082
+kafdrop_broker_connect: "localhost:9092"
