@@ -1,0 +1,14 @@
+[Unit]
+Description=KRaft storage format and advertised listener configuration
+Wants=network-online.target cloud-final.service
+After=local-fs.target network-online.target cloud-final.service
+Before=kafka.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/kafka-bootstrap.sh
+User=root
+
+[Install]
+WantedBy=multi-user.target

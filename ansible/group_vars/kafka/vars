@@ -2,8 +2,14 @@
 
 ansible_user: ec2-user
 
-kafka_sha512: "5954C1CF38187134A6E0A21520CBEF5CD5320A3E9290E630C3895990E892219917D911FABBC64DA5DB17BCAA940B8277C23344B50F2FF4256EACA78116E9FDC9"
-kafka_version: "3.1.0"
+kafka_advertised_host: localhost
+kafka_controller_quorum_bootstrap_servers: localhost:9093
+kafka_heap_opts: "-Xmx1G -Xms1G"
+kafka_min_insync_replicas: 1
+kafka_node_id: 1
+kafka_replication_factor: 1
+kafka_sha512: "acb9961f7ec72f5ff1544afdfbcca39030f2c9ca0d80e8466cf961bd83ae2030bafc28d2577f3f1a099b39c06e6252b8886c1eaf6477f2a2aca8be8b68c0b25e"
+kafka_version: "4.2.2"
 
 logrotate_options:
   - daily
@@ -31,6 +37,19 @@ logrotate_wtmp:
     - create 0664 root utmp
     - minsize 1M
     - rotate 1
+
+logrotate_applications:
+  - name: kafka
+    definitions:
+      - logs:
+          - /var/log/kafka/*.log
+        options:
+          - daily
+          - rotate 7
+          - missingok
+          - notifempty
+          - compress
+          - copytruncate
 
 resource_limits_remove_existing: true
 

@@ -1,5 +1,15 @@
 ---
 
+collections:
+  - name: amazon.aws
+    version: 9.5.1
+  - name: ansible.posix
+    version: 1.6.2
+  - name: community.general
+    version: 10.7.3
+  - name: prometheus.prometheus
+    version: 0.27.0
+
 roles:
   - src: https://github.com/companieshouse/ansible-role-aws-nvme-device-files
     name: aws-nvme-device-files

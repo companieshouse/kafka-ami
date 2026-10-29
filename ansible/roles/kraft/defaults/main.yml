@@ -1,0 +1,7 @@
+---
+
+kafka_advertised_host: localhost
+kafka_controller_quorum_bootstrap_servers: localhost:9093
+kafka_min_insync_replicas: 1
+kafka_node_id: 1
+kafka_replication_factor: 1

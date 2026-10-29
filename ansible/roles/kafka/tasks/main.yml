@@ -1,30 +1,32 @@
 ---
 
 - name: Determine whether selinux is enforcing
-  command: getenforce
+  ansible.builtin.command: getenforce
   register: getenforce
   changed_when: false
 
 - name: Set fact - selinux_enforcing
-  set_fact:
+  ansible.builtin.set_fact:
     selinux_enforcing: "{{ (getenforce.stdout == 'Enforcing') | ternary(True, False) }}"
 
 - name: Put SELinux in permissive mode during installation
-  selinux:
+  ansible.posix.selinux:
     policy: targeted
     state: permissive
   when: selinux_enforcing
 
 - name: Set system timezone to {{ kafka_timezone }}
-  timezone:
+  community.general.timezone:
     name: "{{ kafka_timezone }}"
 
-- import_tasks: install_jdk.yml
+- name: Install Java
+  ansible.builtin.import_tasks: install_jdk.yml
 
-- import_tasks: install_kafka.yml
+- name: Install Kafka
+  ansible.builtin.import_tasks: install_kafka.yml
 
 - name: Put SELinux back in enforcing mode
-  selinux:
+  ansible.posix.selinux:
     policy: targeted
     state: enforcing
   when: selinux_enforcing
