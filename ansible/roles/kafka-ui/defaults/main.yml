@@ -11,3 +11,4 @@ kafdrop_version: "4.3.0"
 kafdrop_sha256: "776d192350db6fb56397f907e110a70e96551cf189d071ac017024490843902a"
 kafdrop_port: 8082
 kafdrop_broker_connect: "localhost:9092"
+kafdrop_properties_file: /etc/kafdrop/kafka.properties
