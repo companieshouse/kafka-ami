@@ -8,7 +8,10 @@ After=network.target kafka.service
 Type=simple
 User={{ kafdrop_user }}
 Group={{ kafdrop_group }}
-ExecStart={{ kafdrop_java }} -jar {{ kafdrop_install_dir }}/kafdrop.jar --kafka.brokerConnect={{ kafdrop_broker_connect }} --server.port={{ kafdrop_port }}
+Environment=KAFDROP_BROKER_CONNECT={{ kafdrop_broker_connect }}
+Environment=KAFDROP_PROPERTIES_FILE={{ kafdrop_properties_file }}
+EnvironmentFile=-/etc/sysconfig/kafdrop.override
+ExecStart={{ kafdrop_java }} -jar {{ kafdrop_install_dir }}/kafdrop.jar --kafka.brokerConnect=${KAFDROP_BROKER_CONNECT} --kafka.propertiesFile=${KAFDROP_PROPERTIES_FILE} --server.port={{ kafdrop_port }}
 Restart=on-failure
 RestartSec=10
 SyslogIdentifier=kafdrop
