@@ -31,8 +31,23 @@ else
 fi
 CLUSTER_ID=$(cat "${CLUSTERID_FILE}")
 
+# SCRAM users written by the kafka-4 Terraform module
+SCRAM_FILE="/etc/kafka/scram-credentials"
+if [[ -s "${SCRAM_FILE}" ]]; then
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ -n "${line}" ]]; then
+      FORMAT_ARGS+=(--add-scram "${line}")
+    fi
+  done < "${SCRAM_FILE}"
+fi
+
 runuser -u {{ kafka_service_user }} -- \
   "{{ kafka_home }}/bin/kafka-storage.sh" format \
   -t "${CLUSTER_ID}" \
   -c "${PROPERTIES}" \
   "${FORMAT_ARGS[@]}"
+
+# Credentials are now stored in the cluster metadata
+if [[ -f "${SCRAM_FILE}" ]]; then
+  shred -u "${SCRAM_FILE}"
+fi
